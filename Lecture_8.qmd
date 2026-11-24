@@ -1,0 +1,135 @@
+---
+title: "National Park State Visits"
+author: "Kaniet Baratov"
+format: html
+editor: visual
+---
+
+## Load data:
+
+```{r}
+#| warning: false
+#| message: false
+library(dplyr)
+# Load data about visits to national parks in 2020
+np_visits_2020_df <- read.csv("https://raw.githubusercontent.com/melaniewalsh/Neat-Datasets/refs/heads/main/2020-National-Park-Visits-By-State.csv")
+# Load data about state populations in 2020 (based on https://www.census.gov/data/tables/time-series/demo/popest/2020s-state-total.html)
+state_pop_2020_df <- read.csv("https://raw.githubusercontent.com/kylethayer/Info-201-au-24-datasets/refs/heads/main/NST-EST2020-POP.csv")
+```
+
+## # Part 1: Get visit information by state
+
+### Visits per state:
+```{r}
+# use group_by and summarize to make a new dataframe called np_state_summary_df with:
+# - State
+# - total_parks (total number of state parks in the state)
+# - total_visits (total number of RecreationVisits to parks in the state)
+np_state_summary_df <-
+  np_visits_2020_df |>
+  group_by(State) |>
+  summarize(
+    total_parks = n(),
+    total_visits = sum(RecreationVisits)
+  )
+np_state_summary_df
+```
+
+### States with the most visits:
+```{r}
+# Find the row(s) for the state(s) with the most visits
+# then use pull to get the State(s) names out
+# save as max_np_visit_state
+max_np_visit_state <-
+  np_state_summary_df |>
+  filter(total_visits == max(total_visits)) |>
+  pull(State)
+max_np_visit_state
+
+# Do the same as above but for least visits
+# save as min_np_visit_state
+min_np_visit_state <-
+  np_state_summary_df |>
+  filter(total_visits == min(total_visits)) |>
+  pull(State)
+min_np_visit_state
+```
+
+## Part 2: Compare visit rate to state population
+
+### Combine the datasets:
+```{r}
+# Take your np_state_summary_df and left_join it with state_pop_2020_df
+# Note: the matching columns have different names
+# Save it as np_state_pop_df
+np_state_pop_df <-
+  np_state_summary_df |>
+  left_join(state_pop_2020_df, join_by(State == state_abv))
+np_state_pop_df
+
+# Try calculating the total population of all the states in np_state_pop_df
+# without removing NAs
+np_state_pop_df |>
+  pull(pop_2020) |>
+  sum()
+np_state_pop_df
+```
+
+### The NA values are there because the state population dataframe didn't have values for American Samoa and Virginia Islands.
+
+### Making 2 new rows:
+```{r}
+# Use mutate to make two new rows: 
+# - np_per_capita (the total_parks divided by pop_2020)
+# - np_visits_per_capita (the total_visits divided by pop_2020)
+# Save back into the np_state_pop_df variable
+np_state_pop_df <- 
+  np_state_pop_df |>
+  mutate(
+    np_per_capita = total_parks / pop_2020,
+    np_visits_per_capita = total_visits / pop_2020
+  )
+np_state_pop_df
+```
+
+
+### Most/Least parks per capita & Most/Least park visits per capita:
+```{r}
+# Find which state(s) have the most parks per capita 
+# Note: you'll have to use na.rm = TRUE
+np_state_pop_df |>
+  filter(np_per_capita == max(np_per_capita, na.rm = TRUE)) |>
+  pull(state)
+
+# Find which state(s) have the least parks per capita 
+# Note: you'll have to use na.rm = TRUE
+np_state_pop_df |>
+  filter(np_per_capita == min(np_per_capita, na.rm = TRUE)) |>
+  pull(state)
+
+# Find which state(s) have the most park visits per capita 
+# Note: you'll have to use na.rm = TRUE
+np_state_pop_df |>
+  filter(np_visits_per_capita == max(np_visits_per_capita, na.rm = TRUE)) |>
+  pull(state)
+
+# Find which state(s) have the least park visits per capita 
+# Note: you'll have to use na.rm = TRUE
+np_state_pop_df |>
+  filter(np_visits_per_capita == min(np_visits_per_capita, na.rm = TRUE)) |>
+  pull(state)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
