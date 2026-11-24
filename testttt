@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>About Me</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Baratofff</h1>
+  <p>Hi! This is the testing about me page.</p>
+</body>
+</html>
